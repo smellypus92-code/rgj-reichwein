@@ -1,0 +1,82 @@
+name: Decode assets and enable Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  decode-and-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Decode binary assets
+        run: |
+          python3 << 'PY'
+          import base64, pathlib
+          mapping = {
+              "images/artist.jpg.b64": "images/artist.jpg",
+              "images/favicon.png.b64": "images/favicon.png",
+              "images/favicon-32.png.b64": "images/favicon-32.png",
+              "images/apple-touch-icon.png.b64": "images/apple-touch-icon.png",
+              "fonts/manrope-latin.woff2.b64": "fonts/manrope-latin.woff2",
+              "fonts/manrope-latin-ext.woff2.b64": "fonts/manrope-latin-ext.woff2",
+              "fonts/syne-latin.woff2.b64": "fonts/syne-latin.woff2",
+              "fonts/syne-latin-ext.woff2.b64": "fonts/syne-latin-ext.woff2",
+          }
+          for src, dest in mapping.items():
+              sp, dp = pathlib.Path(src), pathlib.Path(dest)
+              if not sp.exists():
+                  print("skip missing", src)
+                  continue
+              dp.parent.mkdir(parents=True, exist_ok=True)
+              dp.write_bytes(base64.b64decode(sp.read_text()))
+              print("wrote", dest, dp.stat().st_size)
+          PY
+
+      - name: Commit decoded assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add images fonts
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit"
+          else
+            git commit -m "Add decoded site images and fonts"
+            git push
+          fi
+
+      - name: Enable GitHub Pages from main branch root
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          # Preferred: deploy from main branch root
+          gh api --method POST "/repos/${{ github.repository }}/pages" \
+            -H "Accept: application/vnd.github+json" \
+            -f "build_type=legacy" \
+            -f "source[branch]=main" \
+            -f "source[path]=/"
+          POST_STATUS=$?
+          if [ $POST_STATUS -ne 0 ]; then
+            echo "POST failed, trying PUT update..."
+            gh api --method PUT "/repos/${{ github.repository }}/pages" \
+              -H "Accept: application/vnd.github+json" \
+              -f "build_type=legacy" \
+              -f "source[branch]=main" \
+              -f "source[path]=/"
+          fi
+          echo "Current Pages settings:"
+          gh api "/repos/${{ github.repository }}/pages" -H "Accept: application/vnd.github+json" || true

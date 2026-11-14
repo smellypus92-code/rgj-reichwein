@@ -468,6 +468,68 @@ a {
   margin: 0;
 }
 
+
+.legal {
+  padding: 4.5rem 0 5.5rem;
+}
+
+.legal-header {
+  margin-bottom: 2.4rem;
+  max-width: 42rem;
+}
+
+.legal-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.legal-meta {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.legal-article {
+  max-width: 42rem;
+}
+
+.legal-article h2 {
+  margin: 2.2rem 0 0.7rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.legal-article p,
+.legal-article li {
+  color: var(--cream-dim);
+}
+
+.legal-article p {
+  margin: 0 0 0.85rem;
+}
+
+.legal-article ul {
+  margin: 0 0 0.85rem;
+  padding-left: 1.2rem;
+}
+
+.legal-article li + li {
+  margin-top: 0.35rem;
+}
+
+.legal-note {
+  margin-top: 2.4rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+
 @media (min-width: 840px) {
   .hero {
     padding: 5rem 0 6rem;
